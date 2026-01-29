@@ -1,0 +1,114 @@
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>🗂️ Category Master</h2>
+        <button class="btn btn-success" (click)="openAddForm()" [disabled]="loading">
+          + Add Category
+        </button>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage && !showForm" class="alert alert-error">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="loading && !showForm" class="loading">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Category Form (Modal-like) -->
+    <div *ngIf="showForm" class="form-modal">
+      <div class="form-container">
+        <h3>{{ isEditMode ? 'Edit Category' : 'Add New Category' }}</h3>
+        
+        <div *ngIf="errorMessage" class="alert alert-error">
+          {{ errorMessage }}
+        </div>
+
+        <form (ngSubmit)="saveCategory()">
+          <div class="form-group">
+            <label for="category_name">Category Name *</label>
+            <input
+              type="text"
+              id="category_name"
+              class="form-control"
+              [(ngModel)]="currentCategory.category_name"
+              name="category_name"
+              required
+              placeholder="Enter category name"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              class="form-control"
+              [(ngModel)]="currentCategory.description"
+              name="description"
+              placeholder="Enter category description"
+              rows="4"
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="loading">
+              {{ isEditMode ? 'Update' : 'Create' }} Category
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="closeForm()" [disabled]="loading">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div *ngIf="!loading && categories.length > 0 && !showForm">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Category Name</th>
+            <th>Description</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let category of categories">
+            <td>{{ category.category_id }}</td>
+            <td><strong>{{ category.category_name }}</strong></td>
+            <td>{{ category.description || 'N/A' }}</td>
+            <td>{{ category.created_at | date: 'short' }}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn btn-primary btn-sm" (click)="openEditForm(category)">
+                  Edit
+                </button>
+                <button class="btn btn-danger btn-sm" (click)="deleteCategory(category.category_id!, category.category_name)">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && categories.length === 0 && !showForm" class="empty-state">
+      <span style="font-size: 64px;">📁</span>
+      <h3>No categories found</h3>
+      <p>Click "Add Category" to create your first category</p>
+    </div>
+  </div>
+</div>

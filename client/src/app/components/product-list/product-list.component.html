@@ -1,0 +1,228 @@
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <h2>📦 Product Master</h2>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div class="page-size-selector">
+            <label>Show:</label>
+            <select (change)="changePageSize($event)" [value]="pagination.pageSize" class="form-control" style="width: auto; display: inline-block;">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span>per page</span>
+          </div>
+          <button class="btn btn-success" (click)="openAddForm()" [disabled]="loading">
+            + Add Product
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage && !showForm" class="alert alert-error">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="loading && !showForm" class="loading">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Product Form (Modal-like) -->
+    <div *ngIf="showForm" class="form-modal">
+      <div class="form-container">
+        <h3>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h3>
+        
+        <div *ngIf="errorMessage" class="alert alert-error">
+          {{ errorMessage }}
+        </div>
+
+        <form (ngSubmit)="saveProduct()">
+          <div class="form-group">
+            <label for="product_name">Product Name *</label>
+            <input
+              type="text"
+              id="product_name"
+              class="form-control"
+              [(ngModel)]="currentProduct.product_name"
+              name="product_name"
+              required
+              placeholder="Enter product name"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="category_id">Category *</label>
+            <select
+              id="category_id"
+              class="form-control"
+              [(ngModel)]="currentProduct.category_id"
+              name="category_id"
+              required
+            >
+              <option value="0" disabled>-- Select Category --</option>
+              <option *ngFor="let category of categories" [value]="category.category_id">
+                {{ category.category_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="price">Price ($) *</label>
+              <input
+                type="number"
+                id="price"
+                class="form-control"
+                [(ngModel)]="currentProduct.price"
+                name="price"
+                step="0.01"
+                min="0"
+                required
+                placeholder="0.00"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="stock_quantity">Stock Quantity *</label>
+              <input
+                type="number"
+                id="stock_quantity"
+                class="form-control"
+                [(ngModel)]="currentProduct.stock_quantity"
+                name="stock_quantity"
+                min="0"
+                required
+                placeholder="0"
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              class="form-control"
+              [(ngModel)]="currentProduct.description"
+              name="description"
+              placeholder="Enter product description"
+              rows="4"
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="loading">
+              {{ isEditMode ? 'Update' : 'Create' }} Product
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="closeForm()" [disabled]="loading">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Products Table -->
+    <div *ngIf="!loading && products.length > 0 && !showForm">
+      <table>
+        <thead>
+          <tr>
+            <th>Product ID</th>
+            <th>Product Name</th>
+            <th>Category Name</th>
+            <th>Category ID</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let product of products">
+            <td><strong>{{ product.product_id }}</strong></td>
+            <td>{{ product.product_name }}</td>
+            <td><span style="background: #e8f4f8; padding: 4px 8px; border-radius: 4px; font-weight: 500;">{{ product.category_name }}</span></td>
+            <td>{{ product.category_id }}</td>
+            <td>${{ product.price.toFixed(2) }}</td>
+            <td>{{ product.stock_quantity }}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn btn-primary btn-sm" (click)="openEditForm(product)">
+                  Edit
+                </button>
+                <button class="btn btn-danger btn-sm" (click)="deleteProduct(product.product_id!, product.product_name)">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination Info -->
+      <div class="pagination-info" style="text-align: center; margin-top: 15px;">
+        Showing {{ (pagination.currentPage - 1) * pagination.pageSize + 1 }} to 
+        {{ Math.min(pagination.currentPage * pagination.pageSize, pagination.totalRecords) }} 
+        of {{ pagination.totalRecords }} products
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="pagination">
+        <button 
+          class="btn btn-sm"
+          (click)="goToPage(1)" 
+          [disabled]="!pagination.hasPreviousPage"
+        >
+          First
+        </button>
+        
+        <button 
+          class="btn btn-sm"
+          (click)="goToPage(pagination.currentPage - 1)" 
+          [disabled]="!pagination.hasPreviousPage"
+        >
+          Previous
+        </button>
+        
+        <button 
+          *ngFor="let page of getPageNumbers()"
+          class="btn btn-sm"
+          [class.active]="page === pagination.currentPage"
+          (click)="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+        
+        <button 
+          class="btn btn-sm"
+          (click)="goToPage(pagination.currentPage + 1)" 
+          [disabled]="!pagination.hasNextPage"
+        >
+          Next
+        </button>
+        
+        <button 
+          class="btn btn-sm"
+          (click)="goToPage(pagination.totalPages)" 
+          [disabled]="!pagination.hasNextPage"
+        >
+          Last
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && products.length === 0 && !showForm" class="empty-state">
+      <span style="font-size: 64px;">📦</span>
+      <h3>No products found</h3>
+      <p>Click "Add Product" to create your first product</p>
+    </div>
+  </div>
+</div>
