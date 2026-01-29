@@ -27,7 +27,7 @@ npm install
 npm start
 ```
 
-**3. Frontend Setup** (New terminal)
+**3. Frontend Setup** 
 ```bash
 cd client
 npm install
